@@ -1,4 +1,7 @@
 import React from 'react';
+import { FaChartBar, FaUsers, FaBox, FaShoppingCart, FaCog } from 'react-icons/fa';
+import UserDropdown from './UserDropdown';
+import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -6,13 +9,14 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+  const { user } = useAuth();
+  
   const menuItems = [
-    { name: 'Dashboard', icon: '📊', href: '#', active: true },
-    { name: 'Users', icon: '👥', href: '#' },
-    { name: 'Products', icon: '📦', href: '#' },
-    { name: 'Orders', icon: '🛒', href: '#' },
-    { name: 'Analytics', icon: '📈', href: '#' },
-    { name: 'Settings', icon: '⚙️', href: '#' },
+    { name: 'Dashboard', icon: FaChartBar, href: '#', active: true },
+    { name: 'Users', icon: FaUsers, href: '#' },
+    { name: 'Products', icon: FaBox, href: '#' },
+    { name: 'Orders', icon: FaShoppingCart, href: '#' },
+    { name: 'Settings', icon: FaCog, href: '#' },
   ];
 
   return (
@@ -55,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     }
                   `}
                 >
-                  <span className="mr-3 text-lg">{item.icon}</span>
+                  <item.icon className="mr-3 text-lg" />
                   {item.name}
                 </a>
               </li>
@@ -63,17 +67,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </ul>
         </nav>
         
-        <div className="absolute bottom-0 w-full p-4 border-t border-gray-200">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-              A
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-700">Admin User</p>
-              <p className="text-xs text-gray-500">admin@example.com</p>
-            </div>
+        {/* User Section */}
+        {user && (
+          <div className="absolute bottom-0 w-full p-4 border-t border-gray-200">
+            <UserDropdown 
+              user={{
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar
+              }}
+              className="w-full"
+            />
           </div>
-        </div>
+        )}
       </div>
     </>
   );
