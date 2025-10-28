@@ -23,6 +23,16 @@ export interface ApiError {
   errors?: Record<string, string[]>;
 }
 
+export interface DiscordMember {
+  referrerId: string;
+  referrerName: string;
+  referredId: string;
+  referredName: string;
+  inviteCode: string;
+  inviteUrl: string;
+  joinedDate: string;
+}
+
 // Auth API functions
 export const authAPI = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
@@ -55,6 +65,23 @@ export const authAPI = {
       throw {
         success: false,
         message: error.response?.data?.message || 'Failed to get profile'
+      } as ApiError;
+    }
+  },
+
+  getDiscordMembers: async (): Promise<DiscordMember[]> => {
+    try {
+      const response = await api.get('/api/v1/users/discord-members');
+      // Handle the API response structure: {success: true, data: [...], message: "..."}
+      if (response.data && response.data.success && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
+      // Fallback if response structure is different
+      return response.data || [];
+    } catch (error: any) {
+      throw {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch Discord members'
       } as ApiError;
     }
   }

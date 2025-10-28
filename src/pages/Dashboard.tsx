@@ -1,5 +1,6 @@
 import React from 'react';
 import DataTable from '../components/DataTable';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const Dashboard: React.FC = () => {
   return (
@@ -11,7 +12,9 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Data Table */}
-      <DataTable />
+      <ErrorBoundary>
+        <DataTable />
+      </ErrorBoundary>
     </div>
   );
 };
