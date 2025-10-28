@@ -33,7 +33,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         {user && (
           <UserDropdown 
             user={{
-              name: user.name,
+              name: user.discordUsername || 'Admin User',
               email: user.email,
               avatar: user.avatar
             }}

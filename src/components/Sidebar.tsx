@@ -1,7 +1,5 @@
 import React from 'react';
-import { FaChartBar, FaUsers, FaBox, FaShoppingCart, FaCog } from 'react-icons/fa';
-import UserDropdown from './UserDropdown';
-import { useAuth } from '../context/AuthContext';
+import { FaChartBar } from 'react-icons/fa';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -9,14 +7,8 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const { user } = useAuth();
-  
   const menuItems = [
     { name: 'Dashboard', icon: FaChartBar, href: '#', active: true },
-    { name: 'Users', icon: FaUsers, href: '#' },
-    { name: 'Products', icon: FaBox, href: '#' },
-    { name: 'Orders', icon: FaShoppingCart, href: '#' },
-    { name: 'Settings', icon: FaCog, href: '#' },
   ];
 
   return (
@@ -67,19 +59,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </ul>
         </nav>
         
-        {/* User Section */}
-        {user && (
-          <div className="absolute bottom-0 w-full p-4 border-t border-gray-200">
-            <UserDropdown 
-              user={{
-                name: user.name,
-                email: user.email,
-                avatar: user.avatar
-              }}
-              className="w-full"
-            />
-          </div>
-        )}
       </div>
     </>
   );
