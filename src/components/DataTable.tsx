@@ -62,6 +62,7 @@ const DataTable: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const itemsPerPage = 10;
   const filterDropdownRef = useRef<HTMLDivElement>(null);
+  const hasFetchedRef = useRef(false);
 
   const filterOptions = [
     { id: 'referrerId', label: 'Referrer ID', icon: FaIdCard },
@@ -84,10 +85,6 @@ const DataTable: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {
-    fetchDiscordMembers();
-  }, []);
-
   const fetchDiscordMembers = async () => {
     try {
       setLoading(true);
@@ -106,6 +103,14 @@ const DataTable: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Fetch members only once on mount (prevent duplicate calls in React StrictMode)
+  useEffect(() => {
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchDiscordMembers();
+    }
+  }, []);
 
   const addFilter = (filterId: string) => {
     if (!activeFilters.includes(filterId)) {
@@ -284,7 +289,10 @@ const DataTable: React.FC = () => {
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
           <button
-            onClick={fetchDiscordMembers}
+            onClick={() => {
+              hasFetchedRef.current = false;
+              fetchDiscordMembers();
+            }}
             className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800"
           >
             Retry
@@ -303,7 +311,10 @@ const DataTable: React.FC = () => {
         <div className="text-center">
           <p className="text-gray-600 mb-4">No data available</p>
           <button
-            onClick={fetchDiscordMembers}
+            onClick={() => {
+              hasFetchedRef.current = false;
+              fetchDiscordMembers();
+            }}
             className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800"
           >
             Refresh Data
