@@ -62,13 +62,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const loginData: LoginRequest = { email, password };
       const response: LoginResponse = await authAPI.login(loginData);
       
-      // Store access_token in localStorage
-      localStorage.setItem('access_token', response.access_token);
-      // Store user data in state (no role requirement)
-      setUser(response.user);
-      
-      toast.success('Login successful!');
-      return { success: true, message: 'Login successful' };
+      // Handle nested response structure: {success, message, data: {access_token, user}}
+      if (response.success && response.data) {
+        // Store access_token in localStorage
+        localStorage.setItem('access_token', response.data.access_token);
+        // Store user data in state (no role requirement)
+        setUser(response.data.user);
+        
+        toast.success(response.message || 'Login successful!');
+        return { success: true, message: response.message || 'Login successful' };
+      } else {
+        throw new Error(response.message || 'Login failed');
+      }
     } catch (error: any) {
       const apiError = error as ApiError;
       const errorMessage = apiError.message || 'Login failed. Please try again.';

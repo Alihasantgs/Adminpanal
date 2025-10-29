@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 
 const AuthForm: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -9,9 +10,17 @@ const AuthForm: React.FC = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect to dashboard when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -38,18 +47,22 @@ const AuthForm: React.FC = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setErrors({}); // Clear previous errors
     
     try {
       const result = await login(formData.email, formData.password);
 
       if (result.success) {
-        navigate('/dashboard');
+        // Navigation will happen automatically via useEffect when isAuthenticated becomes true
+        // Don't set isLoading to false here as component will unmount on navigation
       } else {
-        setErrors({ general: result.message });
+        setErrors({ general: result.message || 'Login failed. Please try again.' });
+        setIsLoading(false);
       }
-    } catch (error) {
-      setErrors({ general: 'Something went wrong. Please try again.' });
-    } finally {
+    } catch (error: any) {
+      // Handle API errors properly - no page refresh, just show error
+      const errorMessage = error?.message || error?.response?.data?.message || 'Something went wrong. Please try again.';
+      setErrors({ general: errorMessage });
       setIsLoading(false);
     }
   };
@@ -94,15 +107,29 @@ const AuthForm: React.FC = () => {
 
               <div className="text-left">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  className={`w-full py-3 border-0 border-b-2 bg-transparent focus:outline-none focus:border-black transition-colors text-lg ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="Enter your password"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className={`w-full py-3 pr-10 border-0 border-b-2 bg-transparent focus:outline-none focus:border-black transition-colors text-lg ${
+                      errors.password ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-0 top-1/2 transform -translate-y-1/2 p-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? (
+                      <AiOutlineEyeInvisible className="w-5 h-5" />
+                    ) : (
+                      <AiOutlineEye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
                 <p className="text-gray-400 text-sm mt-1">Must be at least 8 characters</p>
                 {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
               </div>

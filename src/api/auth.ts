@@ -6,15 +6,21 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  access_token: string;
-  user: {
-    id: string;
-    discordId?: string;
-    email: string;
-    discordUsername?: string;
-    avatar?: string;
-    joinedAt?: string;
+  success: boolean;
+  message: string;
+  statusCode: number;
+  data: {
+    access_token: string;
+    user: {
+      id: string;
+      discordId?: string;
+      email: string;
+      discordUsername?: string;
+      avatar?: string;
+      joinedAt?: string;
+    };
   };
+  timestamp?: string;
 }
 
 export interface ApiError {
@@ -38,6 +44,7 @@ export const authAPI = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     try {
       const response = await api.post('/api/v1/auth/login', credentials);
+      // Handle nested response structure: {success, message, data: {access_token, user}}
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
@@ -71,7 +78,7 @@ export const authAPI = {
 
   getDiscordMembers: async (): Promise<DiscordMember[]> => {
     try {
-      const response = await api.get('/api/v1/users/discord-members');
+      const response = await api.get('/api/v1/members/discord-members');
       // Handle the API response structure: {success: true, data: [...], message: "..."}
       if (response.data && response.data.success && Array.isArray(response.data.data)) {
         return response.data.data;
