@@ -176,15 +176,30 @@ const DataTable: React.FC = () => {
 
   // Filter members based on referrer ID, referred ID, referrer name, and invite code
   const filteredMembers = useMemo(() => {
+    // Trim filter values to remove whitespace
+    const trimmedReferrerId = filterReferrerId.trim().toLowerCase();
+    const trimmedReferredId = filterReferredId.trim().toLowerCase();
+    const trimmedReferrerName = filterReferrerName.trim().toLowerCase();
+    const trimmedInviteCode = filterInviteCode.trim().toLowerCase();
+
     return discordMembers.filter(member => {
-      const referrerIdMatch = !filterReferrerId || 
-        member.referrerId?.toLowerCase().includes(filterReferrerId.toLowerCase());
-      const referredIdMatch = !filterReferredId || 
-        member.referredId?.toLowerCase().includes(filterReferredId.toLowerCase());
-      const referrerNameMatch = !filterReferrerName || 
-        member.referrerName?.toLowerCase().includes(filterReferrerName.toLowerCase());
-      const inviteCodeMatch = !filterInviteCode || 
-        member.inviteCode?.toLowerCase().includes(filterInviteCode.toLowerCase());
+      // Referrer ID filter - exact/partial match
+      const referrerIdMatch = !trimmedReferrerId || 
+        (member.referrerId && member.referrerId.toLowerCase().includes(trimmedReferrerId));
+      
+      // Referred ID filter - exact/partial match
+      const referredIdMatch = !trimmedReferredId || 
+        (member.referredId && member.referredId.toLowerCase().includes(trimmedReferredId));
+      
+      // Referrer Name filter - exact/partial match
+      const referrerNameMatch = !trimmedReferrerName || 
+        (member.referrerName && member.referrerName.toLowerCase().includes(trimmedReferrerName));
+      
+      // Invite Code filter - exact/partial match (case-insensitive)
+      const inviteCodeMatch = !trimmedInviteCode || 
+        (member.inviteCode && member.inviteCode.toLowerCase().includes(trimmedInviteCode));
+      
+      // All filters must match (AND logic)
       return referrerIdMatch && referredIdMatch && referrerNameMatch && inviteCodeMatch;
     });
   }, [discordMembers, filterReferrerId, filterReferredId, filterReferrerName, filterInviteCode]);
