@@ -63,7 +63,7 @@ const DataTable: React.FC = () => {
   const [isReferrerNameDropdownOpen, setIsReferrerNameDropdownOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<DiscordMember | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const itemsPerPage = 20;
+  const itemsPerPage = 200;
   const filterDropdownRef = useRef<HTMLDivElement>(null);
   const referredNameDropdownRef = useRef<HTMLDivElement>(null);
   const referrerNameDropdownRef = useRef<HTMLDivElement>(null);
