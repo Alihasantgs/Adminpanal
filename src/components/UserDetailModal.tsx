@@ -42,7 +42,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ member, isOpen, onClo
     try {
       setLoading(true);
       setError(null);
-      const stats = await authAPI.getReferralStatistics(member.referrerId, member.inviteCode);
+      const stats = await authAPI.getReferralStatistics(member.referrerId);
       setStatistics(stats);
       console.log('Referral Statistics:', stats);
     } catch (err: any) {

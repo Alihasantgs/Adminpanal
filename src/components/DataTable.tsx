@@ -57,7 +57,7 @@ const DataTable: React.FC = () => {
   const [filterReferrerName, setFilterReferrerName] = useState('');
   const [filterReferredName, setFilterReferredName] = useState('');
   const [filterInviteCode, setFilterInviteCode] = useState('');
-  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [activeFilters, setActiveFilters] = useState<string[]>(['referrerName']);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const [isReferredNameDropdownOpen, setIsReferredNameDropdownOpen] = useState(false);
   const [isReferrerNameDropdownOpen, setIsReferrerNameDropdownOpen] = useState(false);
@@ -295,7 +295,7 @@ const DataTable: React.FC = () => {
     const newActiveFilters: string[] = [];
     if (filterReferrerId) newActiveFilters.push('referrerId');
     if (filterReferredId) newActiveFilters.push('referredId');
-    if (filterReferrerName) newActiveFilters.push('referrerName');
+    if (filterReferrerName || true) newActiveFilters.push('referrerName'); // Always show referrerName filter
     if (filterReferredName) newActiveFilters.push('referredName');
     if (filterInviteCode) newActiveFilters.push('inviteCode');
     
@@ -402,6 +402,7 @@ const DataTable: React.FC = () => {
         <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 relative z-10">
           <div className="flex flex-wrap items-center gap-4">
             {/* Add Filter Dropdown Button */}
+            {false && (
             <div className="relative flex-shrink-0" ref={filterDropdownRef}>
               <button
                 onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
@@ -443,6 +444,7 @@ const DataTable: React.FC = () => {
                 </div>
               )}
             </div>
+            )}
 
             {/* Active Filter Inputs */}
             {activeFilters.length > 0 && (
@@ -530,13 +532,6 @@ const DataTable: React.FC = () => {
                             <Icon className="h-3.5 w-3.5 mr-1.5 text-gray-500 flex-shrink-0" />
                             <span>{label}</span>
                           </label>
-                          <button
-                            onClick={() => removeFilter(filterId)}
-                            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100 flex-shrink-0"
-                            title="Remove filter"
-                          >
-                            <FaTimes className="h-3.5 w-3.5" />
-                          </button>
                         </div>
                         <div className="relative" ref={referrerNameDropdownRef}>
                           <input
@@ -566,6 +561,13 @@ const DataTable: React.FC = () => {
                                   {name}
                                 </button>
                               ))}
+                            </div>
+                          )}
+                          {isReferrerNameDropdownOpen && filteredReferrerNames.length === 0 && uniqueReferrerNames.length > 0 && (
+                            <div className="absolute z-[70] mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                              <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                                No matches found
+                              </div>
                             </div>
                           )}
                         </div>
@@ -603,7 +605,7 @@ const DataTable: React.FC = () => {
             )}
 
             {/* Clear All Filters Button */}
-            {activeFilters.length > 0 && (
+            {false && activeFilters.length > 0 && (
               <button
                 onClick={() => {
                   setActiveFilters([]);

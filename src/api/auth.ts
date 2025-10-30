@@ -102,7 +102,7 @@ export const authAPI = {
     }
   },
 
-  getReferralStatistics: async (referrerId: string, inviteCode: string): Promise<ReferralStatistics> => {
+  getReferralStatistics: async (referrerId: string): Promise<ReferralStatistics> => {
     try {
       const response = await api.get(`/api/v1/referrals/statistics/${referrerId}`, {
         // params: {
