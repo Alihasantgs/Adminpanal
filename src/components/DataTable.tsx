@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { FaChevronLeft, FaChevronRight, FaCopy, FaFilter, FaTimes, FaIdCard, FaUser, FaCode } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaCopy, FaFilter, FaTimes, FaUser, FaCode } from 'react-icons/fa';
 import { authAPI, type DiscordMember } from '../api/auth';
 import toast from 'react-hot-toast';
 import UserDetailModal from './UserDetailModal';
@@ -55,19 +55,25 @@ const DataTable: React.FC = () => {
   const [filterReferrerId, setFilterReferrerId] = useState('');
   const [filterReferredId, setFilterReferredId] = useState('');
   const [filterReferrerName, setFilterReferrerName] = useState('');
+  const [filterReferredName, setFilterReferredName] = useState('');
   const [filterInviteCode, setFilterInviteCode] = useState('');
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+  const [isReferredNameDropdownOpen, setIsReferredNameDropdownOpen] = useState(false);
+  const [isReferrerNameDropdownOpen, setIsReferrerNameDropdownOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<DiscordMember | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
   const filterDropdownRef = useRef<HTMLDivElement>(null);
+  const referredNameDropdownRef = useRef<HTMLDivElement>(null);
+  const referrerNameDropdownRef = useRef<HTMLDivElement>(null);
   const hasFetchedRef = useRef(false);
 
   const filterOptions = [
-    { id: 'referrerId', label: 'Referrer ID', icon: FaIdCard },
-    { id: 'referredId', label: 'Referred ID', icon: FaIdCard },
+    // { id: 'referrerId', label: 'Referrer ID', icon: FaIdCard },
+    // { id: 'referredId', label: 'Referred ID', icon: FaIdCard },
     { id: 'referrerName', label: 'Referrer Name', icon: FaUser },
+    { id: 'referredName', label: 'Referred Name', icon: FaUser },
     { id: 'inviteCode', label: 'Invite Code', icon: FaCode },
   ];
 
@@ -76,6 +82,12 @@ const DataTable: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
         setIsFilterDropdownOpen(false);
+      }
+      if (referredNameDropdownRef.current && !referredNameDropdownRef.current.contains(event.target as Node)) {
+        setIsReferredNameDropdownOpen(false);
+      }
+      if (referrerNameDropdownRef.current && !referrerNameDropdownRef.current.contains(event.target as Node)) {
+        setIsReferrerNameDropdownOpen(false);
       }
     };
 
@@ -113,14 +125,19 @@ const DataTable: React.FC = () => {
   }, []);
 
   const addFilter = (filterId: string) => {
-    if (!activeFilters.includes(filterId)) {
-      setActiveFilters([...activeFilters, filterId]);
+    // Only allow one filter at a time - clear existing filter first
+    if (activeFilters.length === 0) {
+      setActiveFilters([filterId]);
+      setIsFilterDropdownOpen(false);
+    } else {
+      // If a filter is already active, don't add new one
+      setIsFilterDropdownOpen(false);
     }
-    setIsFilterDropdownOpen(false);
   };
 
   const removeFilter = (filterId: string) => {
-    setActiveFilters(activeFilters.filter(f => f !== filterId));
+    // Clear all filters - only one filter at a time
+    setActiveFilters([]);
     // Clear the filter value
     switch (filterId) {
       case 'referrerId':
@@ -131,6 +148,9 @@ const DataTable: React.FC = () => {
         break;
       case 'referrerName':
         setFilterReferrerName('');
+        break;
+      case 'referredName':
+        setFilterReferredName('');
         break;
       case 'inviteCode':
         setFilterInviteCode('');
@@ -146,6 +166,8 @@ const DataTable: React.FC = () => {
         return filterReferredId;
       case 'referrerName':
         return filterReferrerName;
+      case 'referredName':
+        return filterReferredName;
       case 'inviteCode':
         return filterInviteCode;
       default:
@@ -164,6 +186,9 @@ const DataTable: React.FC = () => {
       case 'referrerName':
         setFilterReferrerName(value);
         break;
+      case 'referredName':
+        setFilterReferredName(value);
+        break;
       case 'inviteCode':
         setFilterInviteCode(value);
         break;
@@ -179,35 +204,79 @@ const DataTable: React.FC = () => {
     return option ? option.icon : FaFilter;
   };
 
-  // Filter members based on referrer ID, referred ID, referrer name, and invite code
+  // Get unique referred names from the table data
+  const uniqueReferredNames = useMemo(() => {
+    const names = new Set<string>();
+    discordMembers.forEach(member => {
+      if (member.referredName && member.referredName.trim()) {
+        names.add(member.referredName);
+      }
+    });
+    return Array.from(names).sort();
+  }, [discordMembers]);
+
+  // Get unique referrer names from the table data
+  const uniqueReferrerNames = useMemo(() => {
+    const names = new Set<string>();
+    discordMembers.forEach(member => {
+      if (member.referrerName && member.referrerName.trim()) {
+        names.add(member.referrerName);
+      }
+    });
+    return Array.from(names).sort();
+  }, [discordMembers]);
+
+  // Filter members based on referrer ID, referred ID, referrer name, referred name, and invite code
   const filteredMembers = useMemo(() => {
     // Trim filter values to remove whitespace
-    const trimmedReferrerId = filterReferrerId.trim().toLowerCase();
-    const trimmedReferredId = filterReferredId.trim().toLowerCase();
-    const trimmedReferrerName = filterReferrerName.trim().toLowerCase();
-    const trimmedInviteCode = filterInviteCode.trim().toLowerCase();
+    const trimmedReferrerId = filterReferrerId.trim();
+    const trimmedReferredId = filterReferredId.trim();
+    const trimmedReferrerName = filterReferrerName.trim();
+    const trimmedReferredName = filterReferredName.trim();
+    const trimmedInviteCode = filterInviteCode.trim();
 
-    return discordMembers.filter(member => {
-      // Referrer ID filter - exact/partial match
-      const referrerIdMatch = !trimmedReferrerId || 
-        (member.referrerId && member.referrerId.toLowerCase().includes(trimmedReferrerId));
+    // Filter all members based on active filters
+    const filtered = discordMembers.filter(member => {
+      // Referrer ID filter - check if matches (partial)
+      if (trimmedReferrerId) {
+        const referrerIdMatch = member.referrerId?.toLowerCase().includes(trimmedReferrerId.toLowerCase());
+        if (!referrerIdMatch) return false;
+      }
       
-      // Referred ID filter - exact/partial match
-      const referredIdMatch = !trimmedReferredId || 
-        (member.referredId && member.referredId.toLowerCase().includes(trimmedReferredId));
+      // Referred ID filter - check if matches (partial)
+      if (trimmedReferredId) {
+        const referredIdMatch = member.referredId?.toLowerCase().includes(trimmedReferredId.toLowerCase());
+        if (!referredIdMatch) return false;
+      }
       
-      // Referrer Name filter - exact/partial match
-      const referrerNameMatch = !trimmedReferrerName || 
-        (member.referrerName && member.referrerName.toLowerCase().includes(trimmedReferrerName));
+      // Referrer Name filter - check if matches (exact)
+      if (trimmedReferrerName) {
+        const memberReferrerName = member.referrerName?.trim().toLowerCase();
+        const filterReferrerNameLower = trimmedReferrerName.toLowerCase();
+        const referrerNameMatch = memberReferrerName === filterReferrerNameLower;
+        if (!referrerNameMatch) return false;
+      }
       
-      // Invite Code filter - exact/partial match (case-insensitive)
-      const inviteCodeMatch = !trimmedInviteCode || 
-        (member.inviteCode && member.inviteCode.toLowerCase().includes(trimmedInviteCode));
+      // Referred Name filter - check if matches (exact)
+      if (trimmedReferredName) {
+        const memberReferredName = member.referredName?.trim().toLowerCase();
+        const filterReferredNameLower = trimmedReferredName.toLowerCase();
+        const referredNameMatch = memberReferredName === filterReferredNameLower;
+        if (!referredNameMatch) return false;
+      }
       
-      // All filters must match (AND logic)
-      return referrerIdMatch && referredIdMatch && referrerNameMatch && inviteCodeMatch;
+      // Invite Code filter - check if matches (partial)
+      if (trimmedInviteCode) {
+        const inviteCodeMatch = member.inviteCode?.toLowerCase().includes(trimmedInviteCode.toLowerCase());
+        if (!inviteCodeMatch) return false;
+      }
+      
+      // If all active filters match, include this member
+      return true;
     });
-  }, [discordMembers, filterReferrerId, filterReferredId, filterReferrerName, filterInviteCode]);
+
+    return filtered;
+  }, [discordMembers, filterReferrerId, filterReferredId, filterReferrerName, filterReferredName, filterInviteCode]);
 
   const totalItems = filteredMembers.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -215,10 +284,11 @@ const DataTable: React.FC = () => {
   const endIndex = startIndex + itemsPerPage;
   const currentItems = filteredMembers.slice(startIndex, endIndex);
 
+
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterReferrerId, filterReferredId, filterReferrerName, filterInviteCode]);
+  }, [filterReferrerId, filterReferredId, filterReferrerName, filterReferredName, filterInviteCode]);
 
   // Sync activeFilters with filter values
   useEffect(() => {
@@ -226,10 +296,11 @@ const DataTable: React.FC = () => {
     if (filterReferrerId) newActiveFilters.push('referrerId');
     if (filterReferredId) newActiveFilters.push('referredId');
     if (filterReferrerName) newActiveFilters.push('referrerName');
+    if (filterReferredName) newActiveFilters.push('referredName');
     if (filterInviteCode) newActiveFilters.push('inviteCode');
     
     setActiveFilters(newActiveFilters);
-  }, [filterReferrerId, filterReferredId, filterReferrerName, filterInviteCode]);
+  }, [filterReferrerId, filterReferredId, filterReferrerName, filterReferredName, filterInviteCode]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -303,7 +374,7 @@ const DataTable: React.FC = () => {
   }
 
   // Show message if no data loaded at all (not due to filtering)
-  const hasNoData = !loading && discordMembers.length === 0 && !filterReferrerId && !filterReferredId && !filterReferrerName && !filterInviteCode;
+  const hasNoData = !loading && discordMembers.length === 0 && !filterReferrerId && !filterReferredId && !filterReferrerName && !filterReferredName && !filterInviteCode;
   
   if (hasNoData) {
     return (
@@ -326,9 +397,9 @@ const DataTable: React.FC = () => {
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         {/* Filter Section */}
-        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 relative z-10">
           <div className="flex flex-wrap items-center gap-4">
             {/* Add Filter Dropdown Button */}
             <div className="relative flex-shrink-0" ref={filterDropdownRef}>
@@ -342,25 +413,26 @@ const DataTable: React.FC = () => {
 
               {/* Dropdown Menu */}
               {isFilterDropdownOpen && (
-                <div className="absolute z-50 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
+                <div className="absolute z-[60] mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
                   <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Available Filters
                   </div>
                   {filterOptions.map((option) => {
                     const Icon = option.icon;
                     const isActive = activeFilters.includes(option.id);
+                    const hasActiveFilter = activeFilters.length > 0;
                     return (
                       <button
                         key={option.id}
-                        onClick={() => !isActive && addFilter(option.id)}
-                        disabled={isActive}
+                        onClick={() => !hasActiveFilter && addFilter(option.id)}
+                        disabled={isActive || hasActiveFilter}
                         className={`w-full px-4 py-2.5 text-left text-sm flex items-center space-x-3 transition-colors ${
-                          isActive
+                          isActive || hasActiveFilter
                             ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
                             : 'text-gray-700 hover:bg-gray-50'
                         }`}
                       >
-                        <Icon className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <Icon className={`h-4 w-4 flex-shrink-0 ${isActive || hasActiveFilter ? 'text-gray-400' : 'text-gray-500'}`} />
                         <span className="flex-1">{option.label}</span>
                         {isActive && (
                           <span className="ml-auto text-xs text-gray-400 flex-shrink-0">Active</span>
@@ -378,6 +450,130 @@ const DataTable: React.FC = () => {
                 {activeFilters.map((filterId) => {
                   const Icon = getFilterIcon(filterId);
                   const label = getFilterLabel(filterId);
+                  const filterValue = getFilterValue(filterId);
+                  
+                  // Special rendering for Referred Name filter with dropdown
+                  if (filterId === 'referredName') {
+                    // Filter names based on input
+                    const filteredReferredNames = uniqueReferredNames.filter(name =>
+                      name.toLowerCase().includes(filterValue.toLowerCase())
+                    );
+
+                    return (
+                      <div key={filterId} className="flex-1 min-w-[200px] max-w-[280px]">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-gray-700 flex items-center">
+                            <Icon className="h-3.5 w-3.5 mr-1.5 text-gray-500 flex-shrink-0" />
+                            <span>{label}</span>
+                          </label>
+                          <button
+                            onClick={() => removeFilter(filterId)}
+                            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100 flex-shrink-0"
+                            title="Remove filter"
+                          >
+                            <FaTimes className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <div className="relative" ref={referredNameDropdownRef}>
+                          <input
+                            type="text"
+                            value={filterValue}
+                            onChange={(e) => {
+                              setFilterValue(filterId, e.target.value);
+                              setIsReferredNameDropdownOpen(true);
+                            }}
+                            onFocus={() => setIsReferredNameDropdownOpen(true)}
+                            placeholder={`Type to search ${label.toLowerCase()}...`}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm transition-all"
+                          />
+                          {isReferredNameDropdownOpen && filteredReferredNames.length > 0 && (
+                            <div className="absolute z-[70] mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                              {filteredReferredNames.map((name) => (
+                                <button
+                                  key={name}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFilterValue(filterId, name);
+                                    setIsReferredNameDropdownOpen(false);
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors"
+                                >
+                                  {name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {isReferredNameDropdownOpen && filteredReferredNames.length === 0 && uniqueReferredNames.length > 0 && (
+                            <div className="absolute z-[70] mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                              <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                                No matches found
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Special rendering for Referrer Name filter with dropdown
+                  if (filterId === 'referrerName') {
+                    // Filter names based on input
+                    const filteredReferrerNames = uniqueReferrerNames.filter(name =>
+                      name.toLowerCase().includes(filterValue.toLowerCase())
+                    );
+
+                    return (
+                      <div key={filterId} className="flex-1 min-w-[200px] max-w-[280px]">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-gray-700 flex items-center">
+                            <Icon className="h-3.5 w-3.5 mr-1.5 text-gray-500 flex-shrink-0" />
+                            <span>{label}</span>
+                          </label>
+                          <button
+                            onClick={() => removeFilter(filterId)}
+                            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100 flex-shrink-0"
+                            title="Remove filter"
+                          >
+                            <FaTimes className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <div className="relative" ref={referrerNameDropdownRef}>
+                          <input
+                            type="text"
+                            value={filterValue}
+                            onChange={(e) => {
+                              setFilterValue(filterId, e.target.value);
+                              setIsReferrerNameDropdownOpen(true);
+                            }}
+                            onFocus={() => setIsReferrerNameDropdownOpen(true)}
+                            placeholder={`Type to search ${label.toLowerCase()}...`}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm transition-all"
+                          />
+                          {isReferrerNameDropdownOpen && filteredReferrerNames.length > 0 && (
+                            <div className="absolute z-[70] mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                              {filteredReferrerNames.map((name) => (
+                                <button
+                                  key={name}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFilterValue(filterId, name);
+                                    setIsReferrerNameDropdownOpen(false);
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors"
+                                >
+                                  {name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  // Regular input for other filters
                   return (
                     <div key={filterId} className="flex-1 min-w-[200px] max-w-[280px]">
                       <div className="flex items-center justify-between mb-2">
@@ -395,7 +591,7 @@ const DataTable: React.FC = () => {
                       </div>
                       <input
                         type="text"
-                        value={getFilterValue(filterId)}
+                        value={filterValue}
                         onChange={(e) => setFilterValue(filterId, e.target.value)}
                         placeholder={`Enter ${label.toLowerCase()}...`}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm transition-all"
@@ -414,6 +610,7 @@ const DataTable: React.FC = () => {
                   setFilterReferrerId('');
                   setFilterReferredId('');
                   setFilterReferrerName('');
+                  setFilterReferredName('');
                   setFilterInviteCode('');
                 }}
                 className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors shadow-sm flex-shrink-0 h-[42px] flex items-center justify-center"
@@ -425,7 +622,7 @@ const DataTable: React.FC = () => {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" style={{ zIndex: 1 }}>
           <table className="min-w-full divide-y divide-gray-200 table-fixed">
             <thead className="bg-gray-50">
               <tr>
@@ -462,7 +659,7 @@ const DataTable: React.FC = () => {
               ) : (
                 currentItems.map((member, index) => (
                   <tr 
-                    key={member?.referrerId || `member-${index}`} 
+                    key={`${member?.referrerId}-${member?.referredId}-${index}`} 
                     className="hover:bg-gray-50 cursor-pointer transition-colors"
                     onClick={() => handleRowClick(member)}
                   >

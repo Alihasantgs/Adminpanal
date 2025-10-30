@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaChevronDown, FaSignOutAlt, FaUser, FaCog } from 'react-icons/fa';
+import { FaChevronDown, FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
 interface UserDropdownProps {
@@ -57,7 +57,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, className = '' }) => 
             <p className="text-sm text-gray-500">{user.email}</p>
           </div>
           
-          <div className="py-1">
+          {/* <div className="py-1">
             <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200">
               <FaUser className="mr-3 text-gray-400" />
               Profile
@@ -66,7 +66,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, className = '' }) => 
               <FaCog className="mr-3 text-gray-400" />
               Settings
             </button>
-          </div>
+          </div> */}
           
           <div className="border-t border-gray-100 pt-1">
             <button

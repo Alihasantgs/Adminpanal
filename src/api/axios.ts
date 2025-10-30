@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL||"https://supercli-dev-495981130172.europe-west1.run.app";
-
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://supercli-dev-495981130172.europe-west1.run.app';
+//https://supercli-dev-495981130172.europe-west1.run.app
 // Create axios instance
 export const api = axios.create({
   baseURL: API_BASE_URL,

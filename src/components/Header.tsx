@@ -1,5 +1,4 @@
 import React from 'react';
-import { FaBell } from 'react-icons/fa';
 import UserDropdown from './UserDropdown';
 import { useAuth } from '../context/AuthContext';
 
@@ -23,11 +22,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
       </div>
       
       <div className="flex items-center space-x-4">
-        {/* Notifications */}
-        <button className="relative p-2 text-gray-500 hover:text-gray-700">
-          <FaBell className="text-xl" />
-          <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400"></span>
-        </button>
+   
         
         {/* User Dropdown */}
         {user && (

@@ -39,6 +39,15 @@ export interface DiscordMember {
   joinedDate: string;
 }
 
+export interface ReferralStatistics {
+  userId: string;
+  discordUsername: string;
+  totalReferrals: number;
+  joinedViaGeneralInvites: number;
+  joinedViaPersonalReferrals: number;
+  lastUpdated: string;
+}
+
 // Auth API functions
 export const authAPI = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
@@ -89,6 +98,27 @@ export const authAPI = {
       throw {
         success: false,
         message: error.response?.data?.message || 'Failed to fetch Discord members'
+      } as ApiError;
+    }
+  },
+
+  getReferralStatistics: async (referrerId: string, inviteCode: string): Promise<ReferralStatistics> => {
+    try {
+      const response = await api.get(`/api/v1/referrals/statistics/${referrerId}`, {
+        // params: {
+        //   inviteCode: inviteCode
+        // }
+      });
+      // Handle the API response structure: {success: true, data: {...}, message: "..."}
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data;
+      }
+      // Fallback if response structure is different
+      return response.data || {};
+    } catch (error: any) {
+      throw {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch referral statistics'
       } as ApiError;
     }
   }

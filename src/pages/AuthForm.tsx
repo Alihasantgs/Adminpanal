@@ -130,7 +130,7 @@ const AuthForm: React.FC = () => {
                     )}
                   </button>
                 </div>
-                <p className="text-gray-400 text-sm mt-1">Must be at least 8 characters</p>
+             
                 {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
               </div>
 
@@ -144,7 +144,7 @@ const AuthForm: React.FC = () => {
             </form>
 
             {/* Legal Text */}
-            <div className="mt-6 space-y-2">
+            {/* <div className="mt-6 space-y-2">
               <p className="text-gray-500 text-sm">You must be at least 18 years old to register.</p>
               <p className="text-gray-500 text-sm">
                 By tapping Continue, you agree to our{' '}
@@ -152,7 +152,7 @@ const AuthForm: React.FC = () => {
                 {' '}and{' '}
                 <a href="#" className="text-blue-600 hover:text-blue-800">Privacy Policy</a>.
               </p>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
