@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import UserDropdown from './UserDropdown';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,6 +9,14 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { user } = useAuth();
+  const location = useLocation();
+
+  const getPageTitle = () => {
+    if (location.pathname === '/invite-table') {
+      return 'Invite Table';
+    }
+    return 'Dashboard';
+  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 h-16 flex items-center justify-between px-6">
@@ -18,7 +27,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         >
           ☰
         </button>
-        <h2 className="text-lg font-semibold text-gray-800">Dashboard</h2>
+        <h2 className="text-lg font-semibold text-gray-800">{getPageTitle()}</h2>
       </div>
       
       <div className="flex items-center space-x-4">

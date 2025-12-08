@@ -26,6 +26,14 @@ const formatDate = (dateString: string | undefined | null) => {
   });
 };
 
+// Helper function to extract invite code from invite URL
+const extractInviteCodeFromUrl = (inviteUrl: string | undefined | null): string => {
+  if (!inviteUrl) return 'N/A';
+  // Extract the last part after the last slash
+  const parts = inviteUrl.split('/');
+  return parts[parts.length - 1] || inviteUrl;
+};
+
 // Custom Tooltip Component
 const Tooltip: React.FC<{ text: string; children: React.ReactNode }> = ({ text, children }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -267,7 +275,8 @@ const DataTable: React.FC = () => {
       
       // Invite Code filter - check if matches (partial)
       if (trimmedInviteCode) {
-        const inviteCodeMatch = member.inviteCode?.toLowerCase().includes(trimmedInviteCode.toLowerCase());
+        const extractedCode = extractInviteCodeFromUrl(member.inviteUrl).toLowerCase();
+        const inviteCodeMatch = extractedCode.includes(trimmedInviteCode.toLowerCase());
         if (!inviteCodeMatch) return false;
       }
       
@@ -694,15 +703,15 @@ const DataTable: React.FC = () => {
                       </Tooltip>
                     </td>
                     <td className="px-4 py-4 align-middle">
-                      <Tooltip text={member?.inviteCode || 'No invite code'}>
+                      <Tooltip text={extractInviteCodeFromUrl(member?.inviteUrl) || 'No invite code'}>
                         <div className="flex items-center space-x-2 cursor-help" onClick={(e) => e.stopPropagation()}>
-                          {member?.inviteCode ? (
+                          {member?.inviteUrl ? (
                             <>
                               <span className="text-sm font-mono text-gray-900 truncate">
-                                {member.inviteCode}
+                                {extractInviteCodeFromUrl(member.inviteUrl)}
                               </span>
                               <button
-                                onClick={() => copyToClipboard(member.inviteCode!)}
+                                onClick={() => copyToClipboard(extractInviteCodeFromUrl(member.inviteUrl!))}
                                 className="text-gray-400 hover:text-gray-600 p-1 rounded flex-shrink-0"
                                 title="Copy invite code"
                               >

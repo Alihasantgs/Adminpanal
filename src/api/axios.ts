@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://supercli-dev-495981130172.europe-west1.run.app';
 //https://supercli-dev-495981130172.europe-west1.run.app
+//http://192.168.0.161:3000
 // Create axios instance
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -31,11 +32,11 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Don't redirect automatically - let the app handle errors
-    // Only clear token if it's a 401 and we're not already on login page
+    // Handle 401 unauthorized - redirect to login page
     if (error.response?.status === 401 && !window.location.pathname.includes('/login')) {
       localStorage.removeItem('access_token');
-      // Don't redirect, let the app handle it
+      // Redirect to login page
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }

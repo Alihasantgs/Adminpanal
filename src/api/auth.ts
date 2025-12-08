@@ -42,10 +42,77 @@ export interface DiscordMember {
 export interface ReferralStatistics {
   userId: string;
   discordUsername: string;
-  totalReferrals: number;
-  joinedViaGeneralInvites: number;
-  joinedViaPersonalReferrals: number;
+  totalInvitesCreated: number;
+  generalInvitesCreated: number;
+  personalInvitesCreated: number;
+  joinedViaInvites: number;
   lastUpdated: string;
+}
+
+export interface DiscordInvite {
+  id: string;
+  inviteCode: string;
+  inviteUrl: string;
+  inviteType: string;
+  targetUsername?: string | null;
+  createdAt: string;
+  creator: {
+    id: string;
+    discordId: string;
+    discordUsername: string;
+  };
+  expiresAt?: string | null;
+  isPermanent: boolean;
+  maxUses?: number | null;
+  totalJoins: number;
+  joinEvents: Array<{
+    id: string;
+    joinerId: string;
+    joinerUsername: string;
+    joinedAt: string;
+  }>;
+  tracking: Array<{
+    id: string;
+    targetDiscordUsername: string;
+    type: string;
+    status: string;
+    sentAt: string;
+    expiresAt?: string | null;
+    joinedAt?: string | null;
+    reminderSentAt?: string | null;
+    referrer: {
+      id: string;
+      discordId: string;
+      discordUsername: string;
+    };
+  }>;
+  isValid: boolean;
+  validationError?: string | null;
+  discordData: {
+    code: string;
+    url: string;
+    uses: number;
+    maxUses: number;
+    maxAge: number;
+    createdAt: string;
+    expiresAt?: string | null;
+    temporary: boolean;
+    inviter: {
+      id: string;
+      username: string;
+      discriminator: string;
+    };
+    channel: {
+      id: string;
+      name: string;
+      type: number;
+    };
+  };
+  maxAge?: number | null;
+  uses: number;
+  status: string;
+  timeUntilExpiry?: string | null;
+  timeUntilExpiryFormatted?: string | null;
 }
 
 // Auth API functions
@@ -119,6 +186,27 @@ export const authAPI = {
       throw {
         success: false,
         message: error.response?.data?.message || 'Failed to fetch referral statistics'
+      } as ApiError;
+    }
+  },
+
+  getDiscordInvites: async (status?: string, expiryType?: string): Promise<DiscordInvite[]> => {
+    try {
+      const params: Record<string, string> = {};
+      if (status) params.status = status;
+      if (expiryType) params.expiryType = expiryType;
+
+      const response = await api.get('/api/v1/discord/invites', { params });
+      // Handle the API response structure: {success: true, invites: [...], summary: {...}, filters: {...}}
+      if (response.data && response.data.success && Array.isArray(response.data.invites)) {
+        return response.data.invites;
+      }
+      // Fallback if response structure is different
+      return response.data?.invites || response.data || [];
+    } catch (error: any) {
+      throw {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch Discord invites'
       } as ApiError;
     }
   }

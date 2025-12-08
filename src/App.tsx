@@ -2,8 +2,10 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { InviteProvider } from './context/InviteContext';
 import AuthForm from './pages/AuthForm';
 import Dashboard from './pages/Dashboard';
+import InviteTablePage from './pages/InviteTable';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 
@@ -74,6 +76,16 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         } 
       />
+      <Route 
+        path="/invite-table" 
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <InviteTablePage />
+            </AppLayout>
+          </ProtectedRoute>
+        } 
+      />
       <Route path="/" element={<Navigate to="/login" replace />} />
     </Routes>
   );
@@ -82,33 +94,35 @@ const AppRoutes: React.FC = () => {
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <Router>
-        <AppRoutes />
-        <Toaster 
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#363636',
-              color: '#fff',
-            },
-            success: {
-              duration: 3000,
-              iconTheme: {
-                primary: '#4ade80',
-                secondary: '#fff',
+      <InviteProvider>
+        <Router>
+          <AppRoutes />
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#363636',
+                color: '#fff',
               },
-            },
-            error: {
-              duration: 5000,
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff',
+              success: {
+                duration: 3000,
+                iconTheme: {
+                  primary: '#4ade80',
+                  secondary: '#fff',
+                },
               },
-            },
-          }}
-        />
-      </Router>
+              error: {
+                duration: 5000,
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
+        </Router>
+      </InviteProvider>
     </AuthProvider>
   );
 };

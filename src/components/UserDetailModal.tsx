@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaCopy, FaUser, FaIdCard, FaCode, FaLink, FaCalendarAlt, FaChartBar } from 'react-icons/fa';
+import { FaTimes, FaCopy, FaUser, FaIdCard, FaCode, FaLink, FaCalendarAlt, FaChartBar, FaUsers, FaPaperPlane, FaEnvelope, FaCheckCircle, FaUserCheck } from 'react-icons/fa';
 import { type DiscordMember, authAPI, type ReferralStatistics } from '../api/auth';
 import toast from 'react-hot-toast';
 
@@ -23,6 +23,14 @@ const formatDate = (dateString: string | undefined | null) => {
     hour: '2-digit',
     minute: '2-digit'
   });
+};
+
+// Helper function to extract invite code from invite URL
+const extractInviteCodeFromUrl = (inviteUrl: string | undefined | null): string => {
+  if (!inviteUrl) return 'N/A';
+  // Extract the last part after the last slash
+  const parts = inviteUrl.split('/');
+  return parts[parts.length - 1] || inviteUrl;
 };
 
 interface UserDetailModalProps {
@@ -101,6 +109,10 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ member, isOpen, onClo
           {/* Content - Scrollable */}
           <div className="bg-gray-50 px-6 py-6 overflow-y-auto flex-1">
             <div className="space-y-6">
+                 {/* Referrer Section */}
+                 {/* <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-200 space-y-6">
+                
+              </div> */}
                  {/* Statistics Section */}
                  <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
                 <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
@@ -118,47 +130,91 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ member, isOpen, onClo
                 ) : statistics ? (
                   <div className="space-y-4">
                     {/* Statistics Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <div className="flex items-center mb-2">
-                          <div className="bg-blue-100 p-2 rounded-lg mr-2">
-                            <FaChartBar className="h-4 w-4 text-blue-600" />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 items-stretch">
+                      {/* Total Invites Created */}
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200 shadow-sm hover:shadow-md transition-shadow h-full">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            <div className="bg-blue-500 p-3 rounded-xl shadow-sm">
+                              <FaUsers className="h-5 w-5 text-white" />
+                            </div>
+                            <span className="text-xs font-semibold text-gray-700 ml-3">Total Invites Generated</span>
                           </div>
-                          <span className="text-xs font-medium text-gray-600">Total Referrals</span>
                         </div>
-                        <div className="text-2xl font-bold text-blue-600">{statistics.totalReferrals}</div>
+                        <div className="flex items-baseline">
+                          <div className="text-3xl font-bold text-blue-700">{statistics.totalInvitesCreated}</div>
+                          <div className="ml-2 text-sm text-blue-600 font-medium">invites</div>
+                        </div>
                       </div>
 
-                      <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                        <div className="flex items-center mb-2">
-                          <div className="bg-green-100 p-2 rounded-lg mr-2">
-                            <FaLink className="h-4 w-4 text-green-600" />
+                      {/* General Invites Created */}
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 border border-green-200 shadow-sm hover:shadow-md transition-shadow h-full">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            <div className="bg-green-500 p-3 rounded-xl shadow-sm">
+                              <FaPaperPlane className="h-5 w-5 text-white" />
+                            </div>
+                            <span className="text-xs font-semibold text-gray-700 ml-3">General Invites</span>
                           </div>
-                          <span className="text-xs font-medium text-gray-600">General Invites</span>
                         </div>
-                        <div className="text-2xl font-bold text-green-600">{statistics.joinedViaGeneralInvites}</div>
+                        <div className="flex items-baseline">
+                          <div className="text-3xl font-bold text-green-700">{statistics.generalInvitesCreated}</div>
+                          <div className="ml-2 text-sm text-green-600 font-medium">sent</div>
+                        </div>
                       </div>
 
-                      <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                        <div className="flex items-center mb-2">
-                          <div className="bg-purple-100 p-2 rounded-lg mr-2">
-                            <FaUser className="h-4 w-4 text-purple-600" />
+                      {/* Personal Invites Created */}
+                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-5 border border-purple-200 shadow-sm hover:shadow-md transition-shadow h-full">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            <div className="bg-purple-500 p-3 rounded-xl shadow-sm">
+                              <FaEnvelope className="h-5 w-5 text-white" />
+                            </div>
+                            <span className="text-xs font-semibold text-gray-700 ml-3">Personal Invites</span>
                           </div>
-                          <span className="text-xs font-medium text-gray-600">Personal Referrals</span>
                         </div>
-                        <div className="text-2xl font-bold text-purple-600">{statistics.joinedViaPersonalReferrals}</div>
+                        <div className="flex items-baseline">
+                          <div className="text-3xl font-bold text-purple-700">{statistics.personalInvitesCreated}</div>
+                          <div className="ml-2 text-sm text-purple-600 font-medium">sent</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Joined Via Invites Card */}
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-5 border border-orange-200 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center">
+                          <div className="bg-orange-500 p-3 rounded-xl shadow-sm">
+                            <FaUserCheck className="h-5 w-5 text-white" />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700 ml-3">People Joined</span>
+                        </div>
+                      </div>
+                      <div className="flex items-baseline">
+                        <div className="text-3xl font-bold text-orange-700">{statistics.joinedViaInvites}</div>
+                        <div className="ml-2 text-sm text-orange-600 font-medium">joined via your invites</div>
                       </div>
                     </div>
 
                     {/* User Info */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-gray-600">Discord Username</span>
-                        <span className="text-sm font-semibold text-gray-900">{statistics.discordUsername}</span>
+                    <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                      <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
+                        <div className="flex items-center">
+                          <div className="bg-gray-100 p-2 rounded-lg mr-3">
+                            <FaUser className="h-4 w-4 text-gray-600" />
+                          </div>
+                          <span className="text-xs font-medium text-gray-600">Discord Username</span>
+                        </div>
+                        <span className="text-sm font-bold text-gray-900">{statistics.discordUsername}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-gray-600">Last Updated</span>
-                        <span className="text-sm text-gray-700">{statistics.lastUpdated ? formatDate(statistics.lastUpdated) : 'N/A'}</span>
+                        <div className="flex items-center">
+                          <div className="bg-gray-100 p-2 rounded-lg mr-3">
+                            <FaCheckCircle className="h-4 w-4 text-gray-600" />
+                          </div>
+                          <span className="text-xs font-medium text-gray-600">Last Updated</span>
+                        </div>
+                        <span className="text-sm text-gray-700 font-medium">{statistics.lastUpdated ? formatDate(statistics.lastUpdated) : 'N/A'}</span>
                       </div>
                     </div>
                   </div>
@@ -167,57 +223,58 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ member, isOpen, onClo
                     No statistics available
                   </div>
                 )}
-              </div>
-              {/* Referrer Section */}
-              <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                  <FaIdCard className="h-4 w-4 mr-2 text-gray-500" />
-                  Referrer Information
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-2">
-                      Referrer ID
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={member.referrerId || 'N/A'}
-                        disabled
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono text-gray-900 focus:outline-none cursor-not-allowed pr-10"
-                      />
-                      <button
-                        onClick={() => copyToClipboard(member.referrerId || '')}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                        title="Copy Referrer ID"
-                      >
-                        <FaCopy className="h-4 w-4" />
-                      </button>
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
+                    <FaIdCard className="h-4 w-4 mr-2 text-gray-500" />
+                    Referrer Information
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">
+                        Referrer ID
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={member.referrerId || 'N/A'}
+                          disabled
+                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono text-gray-900 focus:outline-none cursor-not-allowed pr-10"
+                        />
+                        <button
+                          onClick={() => copyToClipboard(member.referrerId || '')}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                          title="Copy Referrer ID"
+                        >
+                          <FaCopy className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-2">
-                      Referrer Name
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={member.referrerName || 'N/A'}
-                        disabled
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none cursor-not-allowed pr-10"
-                      />
-                      <button
-                        onClick={() => copyToClipboard(member.referrerName || '')}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                        title="Copy Referrer Name"
-                      >
-                        <FaCopy className="h-4 w-4" />
-                      </button>
+                    
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">
+                        Referrer Name
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={member.referrerName || 'N/A'}
+                          disabled
+                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none cursor-not-allowed pr-10"
+                        />
+                        <button
+                          onClick={() => copyToClipboard(member.referrerName || '')}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                          title="Copy Referrer Name"
+                        >
+                          <FaCopy className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+           
+             
 
               {/* Referred Section */}
               <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
@@ -285,12 +342,12 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ member, isOpen, onClo
                     <div className="relative">
                       <input
                         type="text"
-                        value={member.inviteCode || 'N/A'}
+                        value={extractInviteCodeFromUrl(member.inviteUrl)}
                         disabled
                         className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono text-gray-900 focus:outline-none cursor-not-allowed pr-10"
                       />
                       <button
-                        onClick={() => copyToClipboard(member.inviteCode || '')}
+                        onClick={() => copyToClipboard(extractInviteCodeFromUrl(member.inviteUrl))}
                         className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
                         title="Copy Invite Code"
                       >

@@ -1,5 +1,6 @@
 import React from 'react';
-import { FaChartBar } from 'react-icons/fa';
+import { useLocation, Link } from 'react-router-dom';
+import { FaChartBar, FaTable } from 'react-icons/fa';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -7,8 +8,11 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+  const location = useLocation();
+
   const menuItems = [
-    { name: 'Dashboard', icon: FaChartBar, href: '#', active: true },
+    { name: 'Dashboard', icon: FaChartBar, href: '/dashboard', path: '/dashboard' },
+    { name: 'Invite Table', icon: FaTable, href: '/invite-table', path: '/invite-table' },
   ];
 
   return (
@@ -39,23 +43,32 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         
         <nav className="mt-6 px-3">
           <ul className="space-y-2">
-            {menuItems.map((item) => (
-              <li key={item.name}>
-                <a
-                  href={item.href}
-                  className={`
-                    flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200
-                    ${item.active 
-                      ? 'bg-primary-100 text-primary-700' 
-                      : 'text-gray-700 hover:bg-gray-100'
-                    }
-                  `}
-                >
-                  <item.icon className="mr-3 text-lg" />
-                  {item.name}
-                </a>
-              </li>
-            ))}
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <li key={item.name}>
+                  <Link
+                    to={item.href}
+                    onClick={() => {
+                      // Close sidebar on mobile when navigating
+                      if (window.innerWidth < 1024) {
+                        onClose();
+                      }
+                    }}
+                    className={`
+                      flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200
+                      ${isActive 
+                        ? 'bg-primary-100 text-primary-700' 
+                        : 'text-gray-700 hover:bg-gray-100'
+                      }
+                    `}
+                  >
+                    <item.icon className="mr-3 text-lg" />
+                    {item.name}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
         
