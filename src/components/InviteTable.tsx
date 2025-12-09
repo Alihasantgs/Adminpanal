@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaChevronLeft, FaChevronRight, FaCopy, FaTimes, FaCode } from 'react-icons/fa';
 import { useInvites } from '../context/InviteContext';
 import toast from 'react-hot-toast';
