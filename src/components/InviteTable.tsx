@@ -275,9 +275,6 @@ const InviteTable: React.FC = () => {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">
                     Inviter
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
-                    Uses
-                  </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">
                     Expires At
                   </th>
@@ -289,7 +286,7 @@ const InviteTable: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {currentItems.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-500">
+                    <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-500">
                       No results found matching your filters. Try adjusting your search criteria.
                     </td>
                   </tr>
@@ -349,11 +346,6 @@ const InviteTable: React.FC = () => {
                         {invite?.creator?.discordUsername || 'Unknown'}
                       </span>
                     </Tooltip>
-                  </td>
-                  <td className="px-4 py-4 align-middle">
-                    <span className="text-sm text-gray-500">
-                      {invite?.uses !== undefined ? `${invite.uses}${invite?.maxUses ? ` / ${invite.maxUses}` : ''}` : 'N/A'}
-                    </span>
                   </td>
                   <td className="px-4 py-4 align-middle">
                     <Tooltip text={invite?.timeUntilExpiryFormatted || (invite?.expiresAt ? formatDate(invite.expiresAt) : 'Never expires')}>
