@@ -172,54 +172,9 @@ const InviteTable: React.FC = () => {
     return pages;
   };
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={refreshInvites}
-            className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Show message if no data loaded at all (not due to filtering)
-  const hasNoData = !loading && invites.length === 0 && !filterInviteCode;
-  
-  if (hasNoData) {
-    return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">No invite data available</p>
-          <button
-            onClick={refreshInvites}
-            className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800"
-          >
-            Refresh Data
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      {/* Filter Section */}
+      {/* Filter Section - Always Visible */}
       <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 relative z-10">
         <div className="flex flex-wrap items-center gap-4">
           {/* Status Filter Dropdown */}
@@ -230,7 +185,8 @@ const InviteTable: React.FC = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm transition-all bg-white"
+              disabled={loading}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm transition-all bg-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="all">All</option>
               <option value="valid">Valid</option>
@@ -246,7 +202,8 @@ const InviteTable: React.FC = () => {
             <select
               value={filterExpiryType}
               onChange={(e) => setFilterExpiryType(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm transition-all bg-white"
+              disabled={loading}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm transition-all bg-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="all">All</option>
               <option value="permanent">Permanent</option>
@@ -282,7 +239,8 @@ const InviteTable: React.FC = () => {
                       value={filterValue}
                       onChange={(e) => setFilterValue(filterId, e.target.value)}
                       placeholder={`Enter ${label.toLowerCase()}...`}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm transition-all"
+                      disabled={loading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 );
@@ -292,40 +250,62 @@ const InviteTable: React.FC = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto" style={{ zIndex: 1 }}>
-        <table className="min-w-full divide-y divide-gray-200 table-fixed">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[20%]">
-                Invite Code
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[30%]">
-                Invite URL
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">
-                Inviter
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
-                Uses
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">
-                Expires At
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
-                Status
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {currentItems.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-500">
-                  No results found matching your filters. Try adjusting your search criteria.
-                </td>
-              </tr>
-            ) : (
-              currentItems.map((invite: DiscordInvite, index: number) => (
+      {/* Content Section */}
+      {loading ? (
+        <div className="p-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+          </div>
+        </div>
+      ) : error ? (
+        <div className="p-6">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={refreshInvites}
+              className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      ) : (
+
+        <>
+          {/* Table */}
+          <div className="overflow-x-auto" style={{ zIndex: 1 }}>
+            <table className="min-w-full divide-y divide-gray-200 table-fixed">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[20%]">
+                    Invite Code
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[30%]">
+                    Invite URL
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">
+                    Inviter
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
+                    Uses
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">
+                    Expires At
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {currentItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-500">
+                      No results found matching your filters. Try adjusting your search criteria.
+                    </td>
+                  </tr>
+                ) : (
+                  currentItems.map((invite: DiscordInvite, index: number) => (
                 <tr 
                   key={`${invite?.id}-${index}`} 
                   className="hover:bg-gray-50 transition-colors"
@@ -407,39 +387,41 @@ const InviteTable: React.FC = () => {
                 </tr>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <nav className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-        <div className="hidden sm:block">
-          <p className="text-sm text-gray-700">
-            Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
-            <span className="font-medium">{Math.min(endIndex, totalItems)}</span> of{' '}
-            <span className="font-medium">{totalItems}</span> results
-          </p>
-        </div>
-        <div className="flex-1 flex justify-between sm:justify-end">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FaChevronLeft className="h-4 w-4 mr-2" /> Previous
-          </button>
-          <div className="hidden md:flex items-center space-x-2 ml-4">
-            {renderPagination()}
+              </tbody>
+            </table>
           </div>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next <FaChevronRight className="h-4 w-4 ml-2" />
-          </button>
-        </div>
-      </nav>
+
+          {/* Pagination */}
+          <nav className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div className="hidden sm:block">
+              <p className="text-sm text-gray-700">
+                Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
+                <span className="font-medium">{Math.min(endIndex, totalItems)}</span> of{' '}
+                <span className="font-medium">{totalItems}</span> results
+              </p>
+            </div>
+            <div className="flex-1 flex justify-between sm:justify-end">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FaChevronLeft className="h-4 w-4 mr-2" /> Previous
+              </button>
+              <div className="hidden md:flex items-center space-x-2 ml-4">
+                {renderPagination()}
+              </div>
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next <FaChevronRight className="h-4 w-4 ml-2" />
+              </button>
+            </div>
+          </nav>
+        </>
+      )}
     </div>
   );
 };
