@@ -48,13 +48,13 @@ const Tooltip: React.FC<{ text: string; children: React.ReactNode }> = ({ text, 
 };
 
 const InviteTable: React.FC = () => {
-  const { invites, loading, error, refreshInvites, fetchInvites } = useInvites();
+  const { invites, pagination, loading, error, refreshInvites, fetchInvites } = useInvites();
   const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState<number>(50);
   const [filterInviteCode, setFilterInviteCode] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterExpiryType, setFilterExpiryType] = useState<string>('all');
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
-  const itemsPerPage = 200;
   const hasInitialFetchRef = useRef(false);
 
   const removeFilter = (filterId: string) => {
@@ -93,44 +93,31 @@ const InviteTable: React.FC = () => {
     return FaCode;
   };
 
-  // Filter invites based on invite code
-  const filteredInvites = useMemo(() => {
-    const trimmedInviteCode = filterInviteCode.trim();
+  // Use server-side data directly (no client-side filtering for pagination)
+  const currentItems = invites;
 
-    const filtered = invites.filter((invite: DiscordInvite) => {
-      // Invite Code filter - check if matches (partial)
-      if (trimmedInviteCode) {
-        const inviteCode = invite.inviteCode?.toLowerCase() || '';
-        const inviteCodeMatch = inviteCode.includes(trimmedInviteCode.toLowerCase());
-        if (!inviteCodeMatch) return false;
-      }
-      
-      return true;
-    });
+  // Calculate pagination values based on server-side pagination data
+  const totalItems = pagination?.total || 0;
+  const totalPages = totalItems > 0 ? Math.ceil(totalItems / limit) : 1;
+  const currentOffset = pagination?.offset || 0;
+  const returned = pagination?.returned || currentItems.length;
+  const startIndex = totalItems > 0 ? currentOffset + 1 : 0;
+  const endIndex = currentOffset + returned;
 
-    return filtered;
-  }, [invites, filterInviteCode]);
-
-  const totalItems = filteredInvites.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentItems = filteredInvites.slice(startIndex, endIndex);
-
-  // Fetch invites when status or expiryType filter changes (skip initial mount)
+  // Fetch invites when status, expiryType, page, or limit changes
   useEffect(() => {
-    // Skip the first render to avoid duplicate call with context's initial fetch
-    if (!hasInitialFetchRef.current) {
+    const currentOffset = (currentPage - 1) * limit;
+    fetchInvites(filterStatus, filterExpiryType, currentOffset, limit);
+  }, [filterStatus, filterExpiryType, currentPage, limit, fetchInvites]);
+
+  // Reset to page 1 when filters or limit change
+  useEffect(() => {
+    if (hasInitialFetchRef.current) {
+      setCurrentPage(1);
+    } else {
       hasInitialFetchRef.current = true;
-      return;
     }
-    fetchInvites(filterStatus, filterExpiryType);
-  }, [filterStatus, filterExpiryType, fetchInvites]);
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filterInviteCode, filterStatus, filterExpiryType]);
+  }, [filterStatus, filterExpiryType, limit]);
 
   // Sync activeFilters with filter values
   useEffect(() => {
@@ -141,8 +128,10 @@ const InviteTable: React.FC = () => {
   }, [filterInviteCode]);
 
   const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
+    if (page >= 1 && page <= totalPages && page !== currentPage && !loading) {
       setCurrentPage(page);
+      // Scroll to top of table when page changes
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -395,29 +384,63 @@ const InviteTable: React.FC = () => {
           <nav className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
             <div className="hidden sm:block">
               <p className="text-sm text-gray-700">
-                Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
-                <span className="font-medium">{Math.min(endIndex, totalItems)}</span> of{' '}
-                <span className="font-medium">{totalItems}</span> results
+                {totalItems > 0 ? (
+                  <>
+                    Showing <span className="font-medium">{startIndex}</span> to{' '}
+                    <span className="font-medium">{endIndex}</span> of{' '}
+                    <span className="font-medium">{totalItems}</span> results
+                  </>
+                ) : currentItems.length > 0 ? (
+                  <>
+                    Showing <span className="font-medium">{startIndex}</span> to{' '}
+                    <span className="font-medium">{endIndex}</span> results
+                  </>
+                ) : (
+                  <span>No results found</span>
+                )}
               </p>
             </div>
-            <div className="flex-1 flex justify-between sm:justify-end">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <FaChevronLeft className="h-4 w-4 mr-2" /> Previous
-              </button>
-              <div className="hidden md:flex items-center space-x-2 ml-4">
-                {renderPagination()}
+            <div className="flex items-center gap-4">
+              {/* Limit Selector */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-700 whitespace-nowrap">
+                  Items per Page:
+                </label>
+                <select
+                  value={limit}
+                  onChange={(e) => {
+                    const newLimit = parseInt(e.target.value, 10);
+                    setLimit(newLimit);
+                    setCurrentPage(1); // Reset to first page when limit changes
+                  }}
+                  disabled={loading}
+                  className="px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
               </div>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next <FaChevronRight className="h-4 w-4 ml-2" />
-              </button>
+              <div className="flex-1 flex justify-between sm:justify-end">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1 || loading}
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FaChevronLeft className="h-4 w-4 mr-2" /> Previous
+                </button>
+                <div className="hidden md:flex items-center space-x-2 ml-4">
+                  {renderPagination()}
+                </div>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={!pagination?.hasMore || currentPage >= totalPages || loading}
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next <FaChevronRight className="h-4 w-4 ml-2" />
+                </button>
+              </div>
             </div>
           </nav>
         </>

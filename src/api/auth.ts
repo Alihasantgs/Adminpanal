@@ -190,19 +190,38 @@ export const authAPI = {
     }
   },
 
-  getDiscordInvites: async (status?: string, expiryType?: string): Promise<DiscordInvite[]> => {
+  getDiscordInvites: async (status?: string, expiryType?: string, offset?: number, limit?: number): Promise<{ 
+    invites: DiscordInvite[]; 
+    pagination?: {
+      offset: number;
+      limit: number;
+      total: number;
+      returned: number;
+      hasMore: boolean;
+      nextOffset: number;
+    }
+  }> => {
     try {
-      const params: Record<string, string> = {};
+      const params: Record<string, string | number> = {};
       if (status) params.status = status;
       if (expiryType) params.expiryType = expiryType;
+      if (offset !== undefined) params.offset = offset;
+      if (limit !== undefined) params.limit = limit;
 
       const response = await api.get('/api/v1/discord/invites', { params });
-      // Handle the API response structure: {success: true, invites: [...], summary: {...}, filters: {...}}
+      // Handle the API response structure: {success: true, invites: [...], pagination: {...}}
       if (response.data && response.data.success && Array.isArray(response.data.invites)) {
-        return response.data.invites;
+        return {
+          invites: response.data.invites,
+          pagination: response.data.pagination || undefined
+        };
       }
       // Fallback if response structure is different
-      return response.data?.invites || response.data || [];
+      const invites = response.data?.invites || response.data || [];
+      return {
+        invites: Array.isArray(invites) ? invites : [],
+        pagination: response.data?.pagination || undefined
+      };
     } catch (error: any) {
       throw {
         success: false,
